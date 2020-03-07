@@ -2,11 +2,10 @@ const got = require("got");
 const fs = require("fs-extra");
 const cliProgress = require("cli-progress");
 
-
 const multibar = new cliProgress.MultiBar(
   {
     format:
-      "Loading [{bar}] {filename} | {duration}sec | {value}/{total} KBytes",
+      "Loading [{bar}] {filename} | {duration}sec | {value}/{total} Bytes",
     stopOnComplete: true,
     clearOnComplete: false,
     hideCursor: true
@@ -76,9 +75,12 @@ class WikidataSource {
     const collection = actions.addCollection({ typeName: "Record" });
     const downloads = [];
     const dir = process.cwd() + this.options.baseDir;
-    // query Wikidata and process each item
+    // query Wikidata and process items
     await queryDispatcher.query(this.options.sparql).then(response => {
-      response.results.bindings.forEach(item => {
+      // parse JSON body
+      let body = JSON.parse(response.body);
+      // process each item
+      body.results.bindings.forEach(item => {
         // inspect & rewrite item properties
         Object.keys(item).forEach(property => {
           // rewrite URI with the later download file reference
@@ -170,15 +172,11 @@ class SPARQLQueryDispatcher {
     this.url = url;
   }
 
-  query(sparqlQuery) {
+  async query(sparqlQuery) {
     const fullUrl = this.url + "?query=" + encodeURIComponent(sparqlQuery);
-    return axios({
-      method: "get",
-      url: fullUrl,
+    return await got(fullUrl, {
       headers: { Accept: "application/sparql-results+json" }
-    })
-      .then(response => response.data)
-      .catch(error => console.error(`SPARQL ${fullUrl} failed: ${error}`));
+    });
   }
 }
 
