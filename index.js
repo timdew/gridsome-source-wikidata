@@ -79,6 +79,9 @@ class WikidataSource {
     await queryDispatcher
       .query(this.options.sparql)
       .then(response => {
+
+        this.info(response);
+
         // parse JSON body
         let body = JSON.parse(response.body);
         // process each item
