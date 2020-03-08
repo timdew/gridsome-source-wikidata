@@ -79,9 +79,6 @@ class WikidataSource {
     await queryDispatcher
       .query(this.options.sparql)
       .then(response => {
-
-        console.log(response);
-
         // process each item
         response.results.bindings.forEach(item => {
           // inspect & rewrite item properties
@@ -180,8 +177,7 @@ class SPARQLQueryDispatcher {
 
   async query(sparqlQuery) {
     const fullUrl = this.url + "?query=" + encodeURIComponent(sparqlQuery);
-    console.log(fullUrl, "...");
-    return await got(fullUrl, {
+    return got(fullUrl, {
       headers: { Accept: "application/sparql-results+json" }
     }).json();
   }
