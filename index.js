@@ -80,12 +80,10 @@ class WikidataSource {
       .query(this.options.sparql)
       .then(response => {
 
-        this.info(response);
+        console.log(response);
 
-        // parse JSON body
-        let body = JSON.parse(response.body);
         // process each item
-        body.results.bindings.forEach(item => {
+        response.results.bindings.forEach(item => {
           // inspect & rewrite item properties
           Object.keys(item).forEach(property => {
             // rewrite URI with the later download file reference
@@ -182,9 +180,10 @@ class SPARQLQueryDispatcher {
 
   async query(sparqlQuery) {
     const fullUrl = this.url + "?query=" + encodeURIComponent(sparqlQuery);
+    console.log(fullUrl, "...");
     return await got(fullUrl, {
       headers: { Accept: "application/sparql-results+json" }
-    });
+    }).json();
   }
 }
 
