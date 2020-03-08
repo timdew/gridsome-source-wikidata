@@ -1,5 +1,5 @@
 {
-  "version": "0.0.2",
+  "version": "0.0.3",
   "name": "gridsome-source-wikidata",
   "description": "Wikidata source for Gridsome",
   "homepage": "https://github.com/hunsalz/gridsome-source-wikidata",
