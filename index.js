@@ -27,13 +27,19 @@ class WikidataSource {
 
     if (!this.options.url) {
       throw new Error(
-        `Missing url endpoint. Please provide a valid url endpoint.`
+        `Missing 'url' endpoint. Please provide a valid url endpoint.`
       );
     }
 
     if (!this.options.sparql) {
       throw new Error(
-        `Missing sparql query. Please provide a valid sparql query.`
+        `Missing 'sparql' query. Please provide a valid sparql query.`
+      );
+    }
+
+    if (!this.options.typeName) {
+      throw new Error(
+        `Missing 'typeName' label. Please provide a type name label.`
       );
     }
 
@@ -72,7 +78,9 @@ class WikidataSource {
   async fetchWikidata(actions) {
     this.info("Fetching Wikidata ...");
     const queryDispatcher = new SPARQLQueryDispatcher(this.options.url);
-    const collection = actions.addCollection({ typeName: "Record" });
+    const collection = actions.addCollection({
+      typeName: this.options.typeName
+    });
     const downloads = [];
     const dir = process.cwd() + this.options.baseDir;
     // query Wikidata and process items
