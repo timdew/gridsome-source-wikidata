@@ -1,6 +1,10 @@
 const got = require("got");
 const fs = require("fs-extra");
+const Keyv = require("keyv");
+const KeyvFile = require("keyv-file");
 const cliProgress = require("cli-progress");
+
+//require('events').EventEmitter.defaultMaxListeners = 100;
 
 const multibar = new cliProgress.MultiBar(
   {
@@ -17,13 +21,9 @@ class WikidataSource {
   constructor(api, options) {
     this.options = options;
 
-    // verify config params
+    // verify config params ...
 
-    if (this.options.verbose === "true") {
-      this.options.verbose = true;
-    } else {
-      this.options.verbose = false;
-    }
+    // mandatory params
 
     if (!this.options.url) {
       throw new Error(
@@ -43,9 +43,48 @@ class WikidataSource {
       );
     }
 
-    if (!this.options.baseDir) {
+    // optional params
+
+    if (this.options.verbose === undefined) {
+      this.options.verbose = false;
+    }
+
+    if (this.options.baseDir === undefined) {
       this.options.baseDir = "/content/media/";
-      this.warn(`No baseDir provided. Using ${this.options.baseDir} instead.`);
+      this.warn(
+        `No 'baseDir' provided. Using 'baseDir'=${this.options.baseDir} instead.`
+      );
+    }
+
+    if (this.options.cacheEnabled === undefined) {
+      this.options.cacheEnabled = true;
+      this.warn(
+        `No 'cacheEnabled' provided. Using 'cacheEnabled'=${this.options.cacheEnabled} instead.`
+      );
+    }
+
+    if (this.options.cacheExpireTime === undefined) {
+      this.options.cacheExpireTime = 24 * 3600 * 1000;
+      this.warn(
+        `No 'cacheExpireTime' provided. Using 'cacheExpireTime'=${this.options.cacheExpireTime} instead.`
+      );
+    }
+
+    this.info("options =", this.options);
+
+    // init cache
+
+    if (this.options.cacheEnabled) {
+      this.cache = new Keyv({
+        store: new KeyvFile({
+          filename: `${process.cwd()}${this.options.baseDir}/http-cache.json`, // the file path to store the data
+          expiredCheckDelay: this.options.cacheExpireTime, // expire time in ms
+          writeDelay: 100,
+          encode: JSON.stringify, // serialize function
+          decode: JSON.parse // deserialize function
+        })
+      });
+      this.info("cache =", this.cache);
     }
 
     // start processing
@@ -58,10 +97,8 @@ class WikidataSource {
       // fetch data ...
       const downloads = await this.fetchWikidata(actions);
       // download remote URIs ...
-      if (process.env.DOWNLOAD_MEDIA === "true") {
-        this.info("Starting media download(s) ...");
-        await this.download(downloads);
-      }
+      this.info("Starting media download(s) ...");
+      await this.download(downloads);
       // finally stop any progress bar
       multibar.stop();
     });
@@ -76,16 +113,13 @@ class WikidataSource {
   }
 
   async fetchWikidata(actions) {
-    this.info("Fetching Wikidata ...");
-    const queryDispatcher = new SPARQLQueryDispatcher(this.options.url);
     const collection = actions.addCollection({
       typeName: this.options.typeName
     });
     const downloads = [];
     const dir = process.cwd() + this.options.baseDir;
     // query Wikidata and process items
-    await queryDispatcher
-      .query(this.options.sparql)
+    await this.query(this.options.url, this.options.sparql)
       .then(response => {
         // process each item
         response.results.bindings.forEach(item => {
@@ -96,7 +130,7 @@ class WikidataSource {
               let uri = item[property].value;
               let filename = uri.substring(uri.lastIndexOf("/") + 1);
               filename = decodeURI(filename).replace(/%2C/g, ",");
-              // TODO file name
+              // TODO unique file name
               downloads.push({
                 src: uri,
                 dir: dir,
@@ -118,6 +152,16 @@ class WikidataSource {
     return downloads;
   }
 
+  async query(url, sparqlQuery) {
+    const fullUrl = url + "?query=" + encodeURIComponent(sparqlQuery);
+    let cfg = { headers: { Accept: "application/sparql-results+json" } };
+    if (this.options.cacheEnabled) {
+      cfg.cache = this.cache;
+    }
+    this.info("Fetching Wikidata ...");
+    return got(fullUrl, cfg).json();
+  }
+
   async download(downloads) {
     await Promise.all(
       downloads.map(download =>
@@ -136,6 +180,10 @@ class WikidataSource {
 
   async stream2File(src, dir, filename) {
     var bar;
+    let cfg = {};
+    if (this.options.cacheEnabled) {
+      cfg.cache = this.cache;
+    }
     // ensure that directory exists
     fs.ensureDirSync(dir);
     // create write stream
@@ -143,7 +191,7 @@ class WikidataSource {
     const writer = fs.createWriteStream(path);
     // start request
     const response = await got
-      .stream(src)
+      .stream(src, cfg)
       .on("response", response => {
         // in verbose mode get content length to initialize progress bar
         if (this.options.verbose) {
@@ -163,7 +211,6 @@ class WikidataSource {
           bar.update(progress.transferred);
         }
       });
-
     // pipe data stream to disk
     response.pipe(writer);
     return new Promise((resolve, reject) => {
@@ -175,19 +222,6 @@ class WikidataSource {
         reject(err);
       });
     });
-  }
-}
-
-class SPARQLQueryDispatcher {
-  constructor(url) {
-    this.url = url;
-  }
-
-  async query(sparqlQuery) {
-    const fullUrl = this.url + "?query=" + encodeURIComponent(sparqlQuery);
-    return got(fullUrl, {
-      headers: { Accept: "application/sparql-results+json" }
-    }).json();
   }
 }
 
