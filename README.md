@@ -48,7 +48,5 @@ verbose | set verbose mode | false
 
 ## Open issues
 
-* download URIs based on an automatic file verification
-* add fine grained filters for URI downloads 
-* current version affected by a bug in [Node.js ≥ 13.10.0](https://github.com/sindresorhus/got/issues/1107)
+* add fine grained filters for URI downloads
 
