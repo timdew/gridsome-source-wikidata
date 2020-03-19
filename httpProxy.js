@@ -219,7 +219,7 @@ exports.defaults = {
   baseDir: "/content/",
   cacheFile: ".cache.json",
   cacheEnabled: true,
-  ttl: 60 * 60 * 1000, // 1h
+  ttl: 24 * 60 * 60 * 1000, // 24h
   verbose: false
 };
 
