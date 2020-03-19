@@ -44,7 +44,7 @@ url | `https://query.wikidata.org/sparql` | true
 sparql | SPARQL [examples](https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries/examples) | true
 typeName | Specify [template](https://gridsome.org/docs/templates/) correlation | true
 baseDir | download file folder | false; default: `/content/`
-cacheFile | cache file name | false; default: `.cache.json`
+cacheFile | cache file name | false; default: `.cache.json`
 cacheEnabled | cache toggle | false; default: `true`
 ttl | time to live for cached values | false; default: `24 * 60 * 60 * 1000` ms = 24h
 verbose | set verbose mode | false
