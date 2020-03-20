@@ -46,7 +46,7 @@ typeName | Specify [template](https://gridsome.org/docs/templates/) correlation 
 baseDir | download file folder | false; default: `/content/`
 cacheFile | cache file name | false; default: `.cache.json`
 cacheEnabled | cache toggle | false; default: `true`
-ttl | time to live for cached values | false; default: `24 * 60 * 60 * 1000` ms = 24h
+ttl | time to live for cached values: ttl=0=infinite | false; default: `24 * 60 * 60 * 1000` ms = 24h
 verbose | set verbose mode | false
 
 ## Open issues

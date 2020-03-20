@@ -1,6 +1,6 @@
 const HttpProxy = require("./httpProxy.js");
 
-class WikidataSource {
+class SourcePlugin {
   constructor(api, options) {
     // combine options with defaults
     this._options = exports.defaults;
@@ -29,7 +29,7 @@ class WikidataSource {
     // init HttpProxy
     this._proxy = new HttpProxy({
       baseDir: this._options.baseDir,
-      cacheFile: this._options.cacheFile,
+      cacheFilename: this._options.cacheFilename,
       cacheEnabled: this._options.cacheEnabled,
       ttl: this._options.ttl,
       verbose: this._options.verbose
@@ -38,7 +38,7 @@ class WikidataSource {
     // start processing
 
     api.onCreateNode(options => {
-      this.info(options);
+      //this.info(options);
     });
 
     api.loadSource(async actions => {
@@ -107,7 +107,10 @@ class WikidataSource {
 
 exports.defaults = {
   baseDir: "/content/",
+  cacheFilename: ".cache.json",
+  cacheEnabled: true,
+  ttl: 24 * 60 * 60 * 1000, // 24h
   verbose: false
 };
 
-module.exports = WikidataSource;
+module.exports = SourcePlugin;

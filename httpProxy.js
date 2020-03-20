@@ -29,8 +29,6 @@ class HttpProxy {
     fs.ensureDirSync(this._options.workDir);
     // lookup cache file
     this.readCacheFile();
-
-    console.log(this._options);
   }
 
   async fetchJson(url) {
@@ -48,9 +46,38 @@ class HttpProxy {
     const hash = revisionHash(url);
     const path = this.getPath(hash);
     this.saveFile(path, JSON.stringify(json));
-    this.put(hash, path, this._options.ttl);
+    this.set(hash, path, this._options.ttl);
     // return json
     return json;
+  }
+
+  getPath(hash, type = "json") {
+    const data = this._cache.get(hash);
+    if (data) {
+      return data.path;
+    } else {
+      return `${this._options.workDir}file${this._cache.size}.${type}`;
+    }
+  }
+
+  readFile(path) {
+    try {
+      return fs.readFileSync(path);
+    } catch (err) {
+      return;
+    }
+  }
+
+  saveFile(path, value) {
+    return new Promise((resolve, reject) => {
+      fs.outputFile(path, value, err => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
   async download(downloads) {
@@ -110,7 +137,7 @@ class HttpProxy {
     return new Promise((resolve, reject) => {
       writer.on("finish", () => {
         const hash = revisionHash(url);
-        this.put(hash, path, this._options.ttl);
+        this.set(hash, path, this._options.ttl);
         resolve();
       });
       writer.on("error", err => {
@@ -120,10 +147,19 @@ class HttpProxy {
     });
   }
 
+  /**
+   * Lookup cache entry by url
+   * @param {*} url
+   */
   get(url) {
+    // return if cache is disabled
+    if (!this._options.cacheEnabled) {
+      return;
+    }
+    // lookup cache entry
     const data = this._cache.get(revisionHash(url));
     if (data) {
-      // verify ttl
+      // return if ttl expired
       if (data.ttl && data.ttl < Date.now()) {
         this.warn(`Cache hit expired for ${url}`);
         return;
@@ -131,10 +167,17 @@ class HttpProxy {
       // return value from disk
       return this.readFile(data.path);
     }
+    // return finally
     return;
   }
 
-  put(hash, path, ttl) {
+  /**
+   * Update cache file with new entry
+   * @param {*} hash
+   * @param {*} path
+   * @param {*} ttl
+   */
+  set(hash, path, ttl) {
     // use 0 as undefined setting
     if (ttl === 0) {
       ttl = undefined;
@@ -148,38 +191,8 @@ class HttpProxy {
     this.saveCacheFile();
   }
 
-  // TODO !!!
-  getPath(hash) {
-    const data = this._cache.get(hash);
-    if (data) {
-      return data.path;
-    } else {
-      return `${this._options.workDir}file${this._cache.size}.cache`;
-    }
-  }
-
-  readFile(path) {
-    try {
-      return fs.readFileSync(path);
-    } catch (err) {
-      return;
-    }
-  }
-
-  saveFile(path, value) {
-    return new Promise((resolve, reject) => {
-      fs.outputFile(path, value, err => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-  }
-
   readCacheFile() {
-    const file = this._options.workDir + this._options.cacheFile;
+    const file = this._options.workDir + this._options.cacheFilename;
     try {
       const json = fs.readJsonSync(file);
       this._cache = new Map(json.cache);
@@ -189,7 +202,7 @@ class HttpProxy {
   }
 
   saveCacheFile() {
-    const file = this._options.workDir + this._options.cacheFile;
+    const file = this._options.workDir + this._options.cacheFilename;
     // save cache to file - TODO incremental update
     const json = { cache: [] };
     for (const [key, value] of this._cache) {
@@ -217,7 +230,7 @@ class HttpProxy {
 
 exports.defaults = {
   baseDir: "/content/",
-  cacheFile: ".cache.json",
+  cacheFilename: ".cache.json",
   cacheEnabled: true,
   ttl: 24 * 60 * 60 * 1000, // 24h
   verbose: false
