@@ -45,10 +45,8 @@ class SourcePlugin {
       // fetch data ...
       const downloads = await this.fetchWikidata(actions);
       // download remote URIs ...
-      if (process.env.DOWNLOAD_MEDIA === "true") {
-        this.info("Starting media download(s) ...");
-        await this._proxy.download(downloads);
-      }
+      this.info("Starting media download(s) ...");
+      await this._proxy.download(downloads);
     });
   }
 
