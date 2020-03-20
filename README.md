@@ -51,5 +51,6 @@ verbose | set verbose mode | false
 
 ## Open issues
 
-* add fine grained filters for URI downloads
+* add selective URI downloads with appropriate filter options
+* add a test coverage
 
