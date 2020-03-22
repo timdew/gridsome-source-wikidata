@@ -1,3 +1,7 @@
+[![npm](https://img.shields.io/npm/v/gridsome-source-wikidata.svg)](https://www.npmjs.com/package/gridsome-source-wikidata)
+[![npm](https://img.shields.io/npm/dt/gridsome-source-wikidata.svg)](https://www.npmjs.com/package/gridsome-source-wikidata)
+[![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](http://doge.mit-license.org)
+
 # gridsome-source-wikidata
 
 ## Install
