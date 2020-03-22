@@ -44,14 +44,14 @@ Query SPARQL in [Wikidata Query Service](https://query.wikidata.org/#SELECT%20DI
 
 **property** | **description** | **mandatory** | **default**
 --- | --- | --- | ---
-url | `https://query.wikidata.org/sparql` | true | n/a
-sparql | SPARQL [examples](https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries/examples) | true | n/a
-typeName | Specify [template](https://gridsome.org/docs/templates/) correlation | true | n/a
+url | `https://query.wikidata.org/sparql` | true |
+sparql | SPARQL [examples](https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries/examples) | true |
+typeName | Specify [template](https://gridsome.org/docs/templates/) correlation | true |
 baseDir | download file folder | false | `/content/`
 cacheFile | cache file name | false | `.cache.json`
 cacheEnabled | cache toggle | false | `true`
 ttl | time to live for cached values: ttl=0=infinite | false | `24 * 60 * 60 * 1000 ms = 24h`
-verbose | set verbose mode | false | false
+verbose | set verbose mode | false | `false`
 
 ## Open issues
 
